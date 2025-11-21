@@ -1,73 +1,108 @@
-# React + TypeScript + Vite
+# 🌍 Jordens rotationshastighet – Interaktiv 3D-visualisering
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Det här projektet demonstrerar jordens linjära rotationshastighet beroende på latitud, visualiserat som en interaktiv 3D-glob byggd med:
 
-Currently, two official plugins are available:
+- React
+- TypeScript
+- Vite
+- deck.gl
+- luma.gl
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Projektet körs helt i webbläsaren och visar hur snabbt olika punkter på jordens yta rör sig när planeten roterar.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎯 Funktioner
 
-## Expanding the ESLint configuration
+### 1. Interaktiv 3D-glob
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Rotera, panorera och zooma.
+- Globen använder verklig jordradie och Natural Earth-data.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 2. Latitudband (fartzoner)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Varje band visar rotationshastigheten enligt:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+v = 465 * cos(latitud)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- 465 m/s vid ekvatorn.
+- Färgskala: snabba zoner → ljusare, långsammare zoner → mörkare.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 3. Partikelström längs latituder
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Visuella linjer som markerar:
+
+- Rörelseriktning (österut)
+- Hastighetsvariation mellan olika breddgrader
+
+### 4. Klicka på globen → exakt hastighet
+
+När du klickar:
+
+1. En gul cirkel markeras på vald latitud
+2. Exakt hastighet visas i m/s
+3. En informationspanel öppnas
+4. Jämförelse görs med en tvättmaskins centrifughastighet
+
+### 5. Jämförelse: Jorden vs Tvättmaskin
+
+Panelen visar:
+
+- 🌍 Jordens hastighet i m/s
+- 🧼 Tvättmaskinens trumhastighet (m/s, 1400 rpm)
+- Faktor: hur många gånger snabbare jorden rör sig
+
+### 6. Animationer
+
+Projektet innehåller dynamiska visuella effekter, t.ex. pulserande markeringar.
+
+---
+
+## 🧪 Teknik
+
+Byggt med:
+
+- deck.gl – rendering av glob, linjer och overlays
+- luma.gl – geometri (SphereGeometry)
+- React + TypeScript – UI och logik
+- Vite – snabb utvecklings- och buildmiljö
+
+Fristående från deck.gl:s egna exempel.
+
+---
+
+## 📦 Projektstruktur
+
 ```
+earth-globe/
+  src/
+    App.tsx
+    main.tsx
+    index.css
+  public/
+  index.html
+  vite.config.ts
+  package.json
+```
+
+---
+
+## 🚀 Deployment (GitHub Pages)
+
+För att publicera:
+
+```
+npm run build
+npm run deploy
+```
+
+Detta pushar `dist/` till GitHub-branchen `gh-pages`.
+
+Aktivera sedan:
+
+GitHub → Settings → Pages →  
+"Deploy from branch" → `gh-pages` / root
+
+---
