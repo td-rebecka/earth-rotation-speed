@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DeckGL from "@deck.gl/react";
 import {
   COORDINATE_SYSTEM,
@@ -27,7 +27,16 @@ const sunLight = new SunLight({
 const lightingEffect = new LightingEffect({ ambientLight, sunLight });
 
 export default function App() {
+  const [viewState, setViewState] = useState({
+    longitude: 0,
+    latitude: 20,
+    zoom: 0,
+  });
+
+  const [rotationSpeed, setRotationSpeed] = useState(0);
   const [latClicked, setLatClicked] = useState<number | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [showHint, setShowHint] = useState(true);
 
   const bands = useMemo(() => {
     const layers: LineLayer<any>[] = [];
@@ -121,42 +130,114 @@ export default function App() {
   const currentSpeed =
     latClicked !== null ? 465 * Math.cos((latClicked * Math.PI) / 180) : null;
 
+  useEffect(() => {
+    let frame: number;
+
+    const animate = () => {
+      setViewState((vs) => ({
+        ...vs,
+        longitude: vs.longitude + rotationSpeed,
+      }));
+      frame = requestAnimationFrame(animate);
+    };
+
+    if (rotationSpeed !== 0) {
+      frame = requestAnimationFrame(animate);
+    }
+
+    return () => cancelAnimationFrame(frame);
+  }, [rotationSpeed]);
+
   return (
     <>
+      {showHint && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "20px",
+            transform: "translateX(-50%)",
+            background: "rgba(0,0,0,0.65)",
+            color: "white",
+            padding: "10px 16px",
+            borderRadius: 8,
+            fontSize: 14,
+            textAlign: "center",
+            zIndex: 200,
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+            maxWidth: "80%",
+          }}
+        >
+          Tryck på en latitud-linje
+        </div>
+      )}
+
       <DeckGL
         views={new GlobeView()}
-        initialViewState={{ longitude: 0, latitude: 20, zoom: 0 }}
         controller={true}
+        viewState={viewState}
+        onViewStateChange={({ viewState: vs }) => setViewState(vs)}
         effects={[lightingEffect]}
         layers={[...earth, ...bands, particles, clickedLayer]}
         onClick={(info) => {
           if (info.coordinate) {
-            setLatClicked(info.coordinate[1] as number);
+            setShowHint(false);
+
+            const lat = info.coordinate[1] as number;
+            setLatClicked(lat);
+
+            const v = 465 * Math.cos((lat * Math.PI) / 180);
+            const speed = (v / 465) * 1;
+            setRotationSpeed(speed);
           }
         }}
       />
 
-      {latClicked !== null && currentSpeed !== null && (
+      {/* Knapp som alltid finns */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        style={{
+          position: "absolute",
+          right: 12,
+          top: 12,
+          zIndex: 200,
+          padding: "6px 10px",
+          borderRadius: 6,
+          background: "rgba(0,0,0,0.6)",
+          color: "white",
+          border: "1px solid rgba(255,255,255,0.2)",
+          fontSize: 12,
+          backdropFilter: "blur(3px)",
+        }}
+      >
+        {collapsed ? "Visa info" : "Dölj"}
+      </button>
+
+      {/* Själva infoboxen */}
+      {!collapsed && latClicked !== null && currentSpeed !== null && (
         <div
           style={{
             position: "absolute",
-            right: 20,
-            top: 20,
-            width: 280,
-            background: "rgba(0,0,0,0.75)",
+            right: 12,
+            top: 12,
+            width: 200,
+            background: "rgba(0,0,0,0.7)",
             color: "white",
-            padding: "18px 20px",
-            borderRadius: 12,
-            fontSize: 15,
-            backdropFilter: "blur(6px)",
-            boxShadow: "0 0 20px rgba(0,0,0,0.4)",
+            padding: "12px 14px",
+            borderRadius: 10,
+            fontSize: 13,
+            lineHeight: 1.3,
+            backdropFilter: "blur(4px)",
+            boxShadow: "0 0 12px rgba(0,0,0,0.35)",
             border: "1px solid rgba(255,255,255,0.1)",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 6,
           }}
         >
-          <div style={{ fontSize: 20, fontWeight: 600 }}>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>
             🌍 Jordens rotation
           </div>
 
@@ -164,28 +245,35 @@ export default function App() {
             Latitud: <b>{latClicked.toFixed(2)}°</b>
           </div>
 
-          <div style={{ fontSize: 26, fontWeight: 700, color: "#4dd0ff" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#4dd0ff" }}>
             {currentSpeed.toFixed(1)} m/s
           </div>
 
           <div style={{ marginTop: 6, fontSize: 17 }}>🧼 Tvättmaskin</div>
 
-          <div style={{ fontSize: 24, fontWeight: 700, color: "#ffc34d" }}>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: "#ffc34d",
+              marginTop: 2,
+            }}
+          >
             {washerSpeed.toFixed(1)} m/s
           </div>
 
           <div
             style={{
-              marginTop: 10,
-              padding: "10px 12px",
+              marginTop: 6,
+              padding: "8px 10px",
               background: "rgba(255,255,255,0.1)",
-              borderRadius: 8,
-              fontSize: 16,
+              borderRadius: 6,
+              fontSize: 14,
               textAlign: "center",
               fontWeight: 600,
             }}
           >
-            Jorden är {(currentSpeed / washerSpeed).toFixed(1)}× snabbare
+            {(currentSpeed / washerSpeed).toFixed(1)}× snabbare
           </div>
         </div>
       )}
