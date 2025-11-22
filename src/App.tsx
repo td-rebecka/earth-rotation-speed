@@ -88,9 +88,9 @@ export default function App() {
 
   const clickedLayer = useMemo(() => {
     if (latClicked === null) return null;
-    const pts: number[][] = [];
 
-    for (let lon = -180; lon <= 180; lon += 2) pts.push([lon, latClicked]);
+    const pts: number[][] = [];
+    for (let lon = -180; lon <= 180; lon += 1) pts.push([lon, latClicked]);
 
     return new LineLayer({
       id: "clicked-lat",
@@ -101,6 +101,9 @@ export default function App() {
           number,
           number
         ],
+      getColor: () => [255, 220, 0], // GUL markering
+      getWidth: () => 4, // Tydligare
+      pickable: false, // Inget klick här
     });
   }, [latClicked]);
 
